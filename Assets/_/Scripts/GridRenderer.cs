@@ -11,11 +11,11 @@ public class GridRenderer : MonoBehaviour
     private List<LineRenderer> _lineRenderers;
     private Vector3 _prevCell;
 
-    private GridSettings _gridSettings;
+    private GridState _gridState;
 
     private void Start()
     {
-        _gridSettings = GetComponent<GridSettings>();
+        _gridState = GetComponent<GridState>();
 
         _gridLines = new GameObject("Grid Lines");
         _gridLines.transform.SetParent(transform);
@@ -30,10 +30,10 @@ public class GridRenderer : MonoBehaviour
         {
             dirtyGrid = false;
             ResetGrid();
-            _gridLines.SetActive(_gridSettings.showGrid);
+            _gridLines.SetActive(_gridState.showGrid);
         }
 
-        var dir = _gridSettings.CurrentCell - _prevCell;
+        var dir = _gridState.CurrentCell - _prevCell;
         if (dir != Vector3.zero)
         {
             MoveLines(dir);
@@ -56,10 +56,10 @@ public class GridRenderer : MonoBehaviour
         }
 
         _lineRenderers.Clear();
-        var lineLength = _gridSettings.cellSize * _gridSettings.gridDimensions;
-        for (var i = 0; i <= _gridSettings.gridDimensions; i++)
+        var lineLength = _gridState.cellSize * _gridState.gridDimensions;
+        for (var i = 0; i <= _gridState.gridDimensions; i++)
         {
-            var offset = i * _gridSettings.cellSize;
+            var offset = i * _gridState.cellSize;
             _lineRenderers.Add(SetupLineRenderer(
                 new GameObject("Grid Line"), new Vector3(0, 0.1f, offset),
                 new Vector3(lineLength, 0.1f, offset)));
@@ -68,7 +68,7 @@ public class GridRenderer : MonoBehaviour
                 new Vector3(offset, 0.1f, lineLength)));
         }
 
-        var cellOffset = -Mathf.FloorToInt(_gridSettings.gridDimensions / 2f);
+        var cellOffset = -Mathf.FloorToInt(_gridState.gridDimensions / 2f);
         MoveLines(new Vector3(cellOffset, 0, cellOffset));
 
         _prevCell = Vector3.zero;
@@ -76,7 +76,7 @@ public class GridRenderer : MonoBehaviour
 
     private void MoveLines(Vector3 direction)
     {
-        var offset = direction * _gridSettings.cellSize;
+        var offset = direction * _gridState.cellSize;
         foreach (var lr in _lineRenderers)
         {
             lr.SetPosition(0, lr.GetPosition(0) + offset);

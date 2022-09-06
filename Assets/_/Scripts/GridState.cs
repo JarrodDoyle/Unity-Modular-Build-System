@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GridSettings : MonoBehaviour
+public class GridState : MonoBehaviour
 {
     public int gridDimensions;
     public float cellSize;
