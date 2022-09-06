@@ -1,23 +1,23 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GridRenderer : MonoBehaviour
 {
-    [SerializeField] private int gridDimensions;
-    [SerializeField] private float cellSize;
     [SerializeField] private Material lineMaterial;
     [SerializeField] private Color color;
 
+    [HideInInspector] public bool dirtyGrid;
     private GameObject _gridLines;
-    private bool _dirtyGrid;
     private List<LineRenderer> _lineRenderers;
     private Vector3 _prevCell;
 
     private GameObject _hitIndicator;
+    private GridSettings _gridSettings;
 
     private void Start()
     {
+        _gridSettings = GetComponent<GridSettings>();
+
         _gridLines = new GameObject("Grid Lines");
         _gridLines.transform.SetParent(transform);
 
@@ -30,22 +30,22 @@ public class GridRenderer : MonoBehaviour
 
     private void Update()
     {
-        if (_dirtyGrid)
+        if (dirtyGrid)
         {
             ResetGrid();
-            _dirtyGrid = false;
+            dirtyGrid = false;
         }
 
         if (Input.GetKeyDown(KeyCode.Q)) MoveLines(new Vector3(0, -1, 0));
         if (Input.GetKeyDown(KeyCode.E)) MoveLines(new Vector3(0, 1, 0));
 
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        var plane = new Plane(Vector3.up, -_prevCell.y * cellSize);
+        var plane = new Plane(Vector3.up, -_prevCell.y * _gridSettings.cellSize);
         if (plane.Raycast(ray, out var enter))
         {
             var hitPoint = ray.GetPoint(enter);
             _hitIndicator.transform.position = hitPoint;
-            Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
+            Vector3 newCell = Vector3Int.FloorToInt(hitPoint / _gridSettings.cellSize);
             newCell.y = _prevCell.y;
 
             var dir = newCell - _prevCell;
@@ -57,7 +57,7 @@ public class GridRenderer : MonoBehaviour
             if (Input.GetMouseButtonDown(0))
             {
                 var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.transform.position = newCell * cellSize + Vector3.one * cellSize / 2;
+                go.transform.position = _gridSettings.cellSize * (newCell + Vector3.one / 2);
             }
         }
     }
@@ -66,11 +66,11 @@ public class GridRenderer : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            _dirtyGrid = true;
+            dirtyGrid = true;
         }
     }
 
-    private void ResetGrid()
+    public void ResetGrid()
     {
         foreach (var lr in _lineRenderers)
         {
@@ -78,18 +78,19 @@ public class GridRenderer : MonoBehaviour
         }
 
         _lineRenderers.Clear();
-        var lineLength = cellSize * gridDimensions;
-        for (var i = 0; i <= gridDimensions; i++)
+        var lineLength = _gridSettings.cellSize * _gridSettings.gridDimensions;
+        for (var i = 0; i <= _gridSettings.gridDimensions; i++)
         {
+            var offset = i * _gridSettings.cellSize;
             _lineRenderers.Add(SetupLineRenderer(
-                new GameObject("Grid Line"), new Vector3(0, 0.1f, i * cellSize),
-                new Vector3(lineLength, 0.1f, i * cellSize)));
+                new GameObject("Grid Line"), new Vector3(0, 0.1f, offset),
+                new Vector3(lineLength, 0.1f, offset)));
             _lineRenderers.Add(SetupLineRenderer(
-                new GameObject("Grid Line"), new Vector3(i * cellSize, 0.1f, 0),
-                new Vector3(i * cellSize, 0.1f, lineLength)));
+                new GameObject("Grid Line"), new Vector3(offset, 0.1f, 0),
+                new Vector3(offset, 0.1f, lineLength)));
         }
 
-        var cellOffset = -Mathf.FloorToInt(gridDimensions / 2f);
+        var cellOffset = -Mathf.FloorToInt(_gridSettings.gridDimensions / 2f);
         MoveLines(new Vector3(cellOffset, 0, cellOffset));
 
         _prevCell = Vector3.zero;
@@ -97,10 +98,11 @@ public class GridRenderer : MonoBehaviour
 
     private void MoveLines(Vector3 direction)
     {
+        var offset = direction * _gridSettings.cellSize;
         foreach (var lr in _lineRenderers)
         {
-            lr.SetPosition(0, lr.GetPosition(0) + direction * cellSize);
-            lr.SetPosition(1, lr.GetPosition(1) + direction * cellSize);
+            lr.SetPosition(0, lr.GetPosition(0) + offset);
+            lr.SetPosition(1, lr.GetPosition(1) + offset);
         }
 
         _prevCell += direction;
