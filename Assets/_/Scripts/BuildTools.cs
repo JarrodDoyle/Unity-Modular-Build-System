@@ -12,6 +12,7 @@ public class BuildTools : MonoBehaviour
     private GridState _gridState;
     private GameObject _gridObjectsManager;
     private Dictionary<Vector3, GameObject> _gridObjectsMap;
+    private PrimitiveType _primitiveType;
 
     private void Start()
     {
@@ -19,21 +20,30 @@ public class BuildTools : MonoBehaviour
         _gridObjectsManager = new GameObject("Built Objects");
         _gridObjectsManager.transform.SetParent(transform);
         _gridObjectsMap = new Dictionary<Vector3, GameObject>();
+        _primitiveType = PrimitiveType.Cube;
     }
 
     private void Update()
     {
+        // Set primitive type
+        if (Input.GetKeyDown(KeyCode.Alpha1)) _primitiveType = PrimitiveType.Cube;
+        if (Input.GetKeyDown(KeyCode.Alpha2)) _primitiveType = PrimitiveType.Capsule;
+        if (Input.GetKeyDown(KeyCode.Alpha3)) _primitiveType = PrimitiveType.Cylinder;
+        if (Input.GetKeyDown(KeyCode.Alpha4)) _primitiveType = PrimitiveType.Sphere;
+        
         var cell = _gridState.CurrentCell;
         var cellBlocked = _gridObjectsMap.ContainsKey(cell);
 
+        // Place a primitive
         if (Input.GetMouseButtonDown(0) && !cellBlocked)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var go = GameObject.CreatePrimitive(_primitiveType);
             go.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
             go.transform.SetParent(_gridObjectsManager.transform);
             _gridObjectsMap.Add(cell, go);
         }
 
+        // Delete a primitive
         if (Input.GetMouseButtonDown(1) && cellBlocked)
         {
             var go = _gridObjectsMap[cell];
