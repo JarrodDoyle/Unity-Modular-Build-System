@@ -24,9 +24,10 @@ public class GridState : MonoBehaviour
             _dirtyGrid = false;
             _gridRenderer.dirtyGrid = true;
         }
-        
-        if (Input.GetKeyDown(KeyCode.Q)) _currentCell.y -= 1;
-        if (Input.GetKeyDown(KeyCode.E)) _currentCell.y += 1;
+
+        var mouseDelta = Input.mouseScrollDelta.y;
+        if (Input.GetKeyDown(KeyCode.Q) || mouseDelta < 0) _currentCell.y -= 1;
+        if (Input.GetKeyDown(KeyCode.E) || mouseDelta > 0) _currentCell.y += 1;
         
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var plane = new Plane(Vector3.up, -_currentCell.y * cellSize);
