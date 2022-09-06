@@ -11,7 +11,6 @@ public class GridRenderer : MonoBehaviour
     private List<LineRenderer> _lineRenderers;
     private Vector3 _prevCell;
 
-    private GameObject _hitIndicator;
     private GridSettings _gridSettings;
 
     private void Start()
@@ -23,9 +22,6 @@ public class GridRenderer : MonoBehaviour
 
         _lineRenderers = new List<LineRenderer>();
         ResetGrid();
-
-        _hitIndicator = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        _hitIndicator.transform.localScale = Vector3.one * 0.25f;
     }
 
     private void Update()
@@ -37,29 +33,10 @@ public class GridRenderer : MonoBehaviour
             _gridLines.SetActive(_gridSettings.showGrid);
         }
 
-        if (Input.GetKeyDown(KeyCode.Q)) MoveLines(new Vector3(0, -1, 0));
-        if (Input.GetKeyDown(KeyCode.E)) MoveLines(new Vector3(0, 1, 0));
-
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        var plane = new Plane(Vector3.up, -_prevCell.y * _gridSettings.cellSize);
-        if (plane.Raycast(ray, out var enter))
+        var dir = _gridSettings.CurrentCell - _prevCell;
+        if (dir != Vector3.zero)
         {
-            var hitPoint = ray.GetPoint(enter);
-            _hitIndicator.transform.position = hitPoint;
-            Vector3 newCell = Vector3Int.FloorToInt(hitPoint / _gridSettings.cellSize);
-            newCell.y = _prevCell.y;
-
-            var dir = newCell - _prevCell;
-            if (dir != Vector3.zero)
-            {
-                MoveLines(dir);
-            }
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.transform.position = _gridSettings.cellSize * (newCell + Vector3.one / 2);
-            }
+            MoveLines(dir);
         }
     }
 
