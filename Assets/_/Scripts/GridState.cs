@@ -38,13 +38,6 @@ public class GridState : MonoBehaviour
             newCell.y = _currentCell.y;
             _currentCell = newCell;
         }
-        
-        if (Input.GetMouseButtonDown(0))
-        {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.transform.position = cellSize * (_currentCell + Vector3.one / 2);
-            go.transform.SetParent(transform);
-        }
     }
     
     private void OnValidate()
