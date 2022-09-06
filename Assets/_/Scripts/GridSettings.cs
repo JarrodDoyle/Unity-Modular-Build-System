@@ -2,8 +2,9 @@ using UnityEngine;
 
 public class GridSettings : MonoBehaviour
 {
-    [SerializeField] public int gridDimensions;
-    [SerializeField] public float cellSize;
+    public int gridDimensions;
+    public float cellSize;
+    public bool showGrid;
 
     private bool _dirtyGrid;
     private GridRenderer _gridRenderer;

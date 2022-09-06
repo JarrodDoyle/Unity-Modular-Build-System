@@ -185,6 +185,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridDimensions: 11
   cellSize: 1
+  showGrid: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0

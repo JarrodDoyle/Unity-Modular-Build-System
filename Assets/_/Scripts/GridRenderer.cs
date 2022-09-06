@@ -32,8 +32,9 @@ public class GridRenderer : MonoBehaviour
     {
         if (dirtyGrid)
         {
-            ResetGrid();
             dirtyGrid = false;
+            ResetGrid();
+            _gridLines.SetActive(_gridSettings.showGrid);
         }
 
         if (Input.GetKeyDown(KeyCode.Q)) MoveLines(new Vector3(0, -1, 0));
@@ -70,7 +71,7 @@ public class GridRenderer : MonoBehaviour
         }
     }
 
-    public void ResetGrid()
+    private void ResetGrid()
     {
         foreach (var lr in _lineRenderers)
         {
