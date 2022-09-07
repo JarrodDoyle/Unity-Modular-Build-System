@@ -19,6 +19,8 @@ public enum BlockRotation
 
 public class BuildTools : MonoBehaviour
 {
+    [SerializeField] private Material indicatorMaterial;
+
     private ToolType ToolType;
     private GridState _gridState;
     private GameObject _gridObjectsManager;
@@ -34,10 +36,10 @@ public class BuildTools : MonoBehaviour
         _gridObjectsManager.transform.SetParent(transform);
         _gridObjectsMap = new Dictionary<Vector3, GameObject>();
         _primitiveType = PrimitiveType.Cube;
-        _indicator = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        _indicator.transform.localScale *= 0.25f;
+        _indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _indicator.transform.SetParent(transform);
         _indicator.name = "Selection Indicator";
+        _indicator.GetComponent<Renderer>().material = indicatorMaterial;
     }
 
     private void Update()
