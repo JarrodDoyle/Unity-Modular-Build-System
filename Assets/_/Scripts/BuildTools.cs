@@ -25,6 +25,7 @@ public class BuildTools : MonoBehaviour
     private Dictionary<Vector3, GameObject> _gridObjectsMap;
     private PrimitiveType _primitiveType;
     private BlockRotation _rotation;
+    private GameObject _indicator;
 
     private void Start()
     {
@@ -33,6 +34,10 @@ public class BuildTools : MonoBehaviour
         _gridObjectsManager.transform.SetParent(transform);
         _gridObjectsMap = new Dictionary<Vector3, GameObject>();
         _primitiveType = PrimitiveType.Cube;
+        _indicator = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        _indicator.transform.localScale *= 0.25f;
+        _indicator.transform.SetParent(transform);
+        _indicator.name = "Selection Indicator";
     }
 
     private void Update()
@@ -57,12 +62,16 @@ public class BuildTools : MonoBehaviour
 
     private void SelectTool()
     {
+        var cell = _gridState.CurrentCell;
+        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
+        _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
     }
 
     private void PlaceTool()
     {
         var cell = _gridState.HighlightCell;
         var cellBlocked = _gridObjectsMap.ContainsKey(cell);
+        _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
 
         // Set primitive type
         if (Input.GetKeyDown(KeyCode.Z)) _primitiveType = PrimitiveType.Cube;
@@ -89,6 +98,7 @@ public class BuildTools : MonoBehaviour
     {
         var cell = _gridState.CurrentCell;
         var cellBlocked = _gridObjectsMap.ContainsKey(cell);
+        _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
 
         // Delete a primitive
         if (Input.GetMouseButtonDown(0) && cellBlocked)
