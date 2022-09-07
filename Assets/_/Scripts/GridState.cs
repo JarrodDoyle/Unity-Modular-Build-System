@@ -4,33 +4,17 @@ using UnityEngine;
 
 public class GridState : MonoBehaviour
 {
-    public int gridDimensions;
     public float cellSize;
-    public bool showGrid;
+    public float pickDistance;
 
-    public Vector3 CurrentCell => _currentCell;
-    public Vector3 HighlightCell => _highlightCell;
+    public Vector3 CurrentCell { get; private set; }
 
-    private bool _dirtyGrid;
-    private GridRenderer _gridRenderer;
-    private Vector3 _currentCell;
-    private Vector3 _highlightCell;
-
-    private void Start()
-    {
-        _gridRenderer = GetComponent<GridRenderer>();
-    }
+    public Vector3 HighlightCell { get; private set; }
 
     private void Update()
     {
-        if (_dirtyGrid)
-        {
-            _dirtyGrid = false;
-            _gridRenderer.dirtyGrid = true;
-        }
-
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out var hitInfo, 50f, LayerMask.GetMask("Building", "Terrain")))
+        if (Physics.Raycast(ray, out var hitInfo, pickDistance, LayerMask.GetMask("Building", "Terrain")))
         {
             var hitLayer = hitInfo.transform.gameObject.layer;
 
@@ -38,14 +22,14 @@ public class GridState : MonoBehaviour
             {
                 var hitPoint = hitInfo.point;
                 Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
-                _currentCell = newCell;
-                _highlightCell = _currentCell;
+                CurrentCell = newCell;
+                HighlightCell = CurrentCell;
             }
             else if (hitLayer == LayerMask.NameToLayer("Building"))
             {
                 var hitPoint = hitInfo.transform.position;
                 Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
-                _currentCell = newCell;
+                CurrentCell = newCell;
 
                 // Calculate most dominant normal axis
                 var normal = hitInfo.normal;
@@ -54,16 +38,8 @@ public class GridState : MonoBehaviour
                 var dir = Vector3.zero;
                 dir[maxIndex] = normal[maxIndex];
                 dir.Normalize();
-                _highlightCell = _currentCell + dir;
+                HighlightCell = CurrentCell + dir;
             }
-        }
-    }
-
-    private void OnValidate()
-    {
-        if (Application.isPlaying)
-        {
-            _dirtyGrid = true;
         }
     }
 }

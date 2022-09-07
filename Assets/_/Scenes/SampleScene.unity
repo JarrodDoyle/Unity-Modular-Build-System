@@ -476,7 +476,6 @@ GameObject:
   m_Component:
   - component: {fileID: 329586263}
   - component: {fileID: 329586265}
-  - component: {fileID: 329586264}
   - component: {fileID: 329586266}
   m_Layer: 0
   m_Name: Build System
@@ -500,21 +499,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &329586264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 329586262}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9960d9542759403ba139e31fdc4c32dd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lineMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
-  color: {r: 0.5849056, g: 0.55233395, b: 0.43316126, a: 1}
-  dirtyGrid: 0
 --- !u!114 &329586265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -527,9 +511,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0caa25aaf1499a56b2b360bbb584bfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridDimensions: 11
   cellSize: 1
-  showGrid: 0
+  pickDistance: 50
 --- !u!114 &329586266
 MonoBehaviour:
   m_ObjectHideFlags: 0
