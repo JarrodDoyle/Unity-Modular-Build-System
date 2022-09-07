@@ -75,6 +75,8 @@ public class BuildTools : MonoBehaviour
 
     private void SelectTool()
     {
+        if (_overUi) return;
+
         var cell = _gridState.CurrentCell;
         var cellBlocked = _gridObjectsMap.ContainsKey(cell);
         _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
@@ -90,7 +92,7 @@ public class BuildTools : MonoBehaviour
         }
 
         if (_selected == null) return;
-
+        
         // We want to try and move the selected object
         if (Input.GetMouseButton(0) && _selectedPos != cell)
         {
