@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class GridState : MonoBehaviour
@@ -35,7 +33,7 @@ public class GridState : MonoBehaviour
         var uiHit = Physics.Raycast(ray, 10f, LayerMask.GetMask("UI"));
         if (!uiHit && Physics.Raycast(ray, out var hitInfo, 25f, LayerMask.GetMask("Building", "Terrain")))
         {
-            var hitLayer = hitInfo.transform.GameObject().layer;
+            var hitLayer = hitInfo.transform.gameObject.layer;
 
             if (hitLayer == LayerMask.NameToLayer("Terrain"))
             {
