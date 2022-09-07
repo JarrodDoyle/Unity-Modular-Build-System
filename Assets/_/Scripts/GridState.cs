@@ -30,7 +30,7 @@ public class GridState : MonoBehaviour
         }
 
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out var hitInfo, 25f, LayerMask.GetMask("Building", "Terrain")))
+        if (Physics.Raycast(ray, out var hitInfo, 50f, LayerMask.GetMask("Building", "Terrain")))
         {
             var hitLayer = hitInfo.transform.gameObject.layer;
 
