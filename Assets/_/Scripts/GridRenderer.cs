@@ -70,19 +70,13 @@ public class GridRenderer : MonoBehaviour
 
         var cellOffset = -Mathf.FloorToInt(_gridState.gridDimensions / 2f);
         MoveLines(new Vector3(cellOffset, 0, cellOffset));
-
         _prevCell = Vector3.zero;
     }
 
     private void MoveLines(Vector3 direction)
     {
         var offset = direction * _gridState.cellSize;
-        foreach (var lr in _lineRenderers)
-        {
-            lr.SetPosition(0, lr.GetPosition(0) + offset);
-            lr.SetPosition(1, lr.GetPosition(1) + offset);
-        }
-
+        _gridLines.transform.position += offset;
         _prevCell += direction;
     }
 
@@ -97,6 +91,7 @@ public class GridRenderer : MonoBehaviour
         lr.material = lineMaterial;
         lr.SetPosition(0, start);
         lr.SetPosition(1, end);
+        lr.useWorldSpace = false;
         return lr;
     }
 }
