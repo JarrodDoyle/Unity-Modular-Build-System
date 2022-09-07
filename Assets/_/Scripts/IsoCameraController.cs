@@ -27,6 +27,10 @@ public class IsoCameraController : MonoBehaviour
         if (dir != Vector3.zero) dir = dir.normalized;
         dir = Quaternion.Euler(0, _rotation, 0) * dir;
         position += dir * (moveSpeed * Time.deltaTime);
+        
+        // Vertical movement
+        var scrollDelta = Input.mouseScrollDelta.y;
+        if (scrollDelta != 0) position.y -= Mathf.Sign(scrollDelta) * gridState.cellSize;
 
         // Rotation
         var newMousePos = Input.mousePosition;
