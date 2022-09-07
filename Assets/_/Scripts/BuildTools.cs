@@ -89,8 +89,10 @@ public class BuildTools : MonoBehaviour
             Debug.Log($"No valid object at {cell}.");
         }
 
+        if (_selected == null) return;
+
         // We want to try and move the selected object
-        if (_selected != null && Input.GetMouseButton(0) && _selectedPos != cell)
+        if (Input.GetMouseButton(0) && _selectedPos != cell)
         {
             var move = false;
             var moveCell = cell;
@@ -115,7 +117,12 @@ public class BuildTools : MonoBehaviour
                 _selectedPos = moveCell;
                 _selected.transform.position = _gridState.cellSize * (moveCell + Vector3.one / 2);
             }
-            
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            var rotation = _selected.transform.rotation.eulerAngles.y;
+            _selected.transform.rotation = Quaternion.Euler(0, rotation + 90f, 0);
         }
     }
 
@@ -171,10 +178,12 @@ public class BuildTools : MonoBehaviour
                 break;
             case ToolType.Place:
                 _indicatorRenderer.material.color = placeIndicatorColor;
+                _selected = null;
                 _indicator.SetActive(true);
                 break;
             case ToolType.Remove:
                 _indicatorRenderer.material.color = removeIndicatorColor;
+                _selected = null;
                 _indicator.SetActive(true);
                 break;
         }
