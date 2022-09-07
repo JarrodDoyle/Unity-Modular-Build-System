@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class GridState : MonoBehaviour
@@ -31,30 +33,32 @@ public class GridState : MonoBehaviour
 
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var uiHit = Physics.Raycast(ray, 10f, LayerMask.GetMask("UI"));
-        var terrainHit = Physics.Raycast(ray, out var terrainHitInfo, 25f, LayerMask.GetMask("Terrain"));
-        var buildingHit = Physics.Raycast(ray, out var buildingHitInfo, 25f, LayerMask.GetMask("Building"));
-
-        if (!uiHit && terrainHit && !buildingHit)
+        if (!uiHit && Physics.Raycast(ray, out var hitInfo, 25f, LayerMask.GetMask("Building", "Terrain")))
         {
-            var hitPoint = terrainHitInfo.point;
-            Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
-            _currentCell = newCell;
-            _highlightCell = _currentCell;
-        }
-        else if (!uiHit && buildingHit)
-        {
-            var hitPoint = buildingHitInfo.transform.position;
-            Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
-            _currentCell = newCell;
+            var hitLayer = hitInfo.transform.GameObject().layer;
 
-            // Calculate most dominant normal axis
-            var normal = buildingHitInfo.normal;
-            var values = new[] {Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z)};
-            var maxIndex = Array.IndexOf(values, values.Max());
-            var dir = Vector3.zero;
-            dir[maxIndex] = normal[maxIndex];
-            dir.Normalize();
-            _highlightCell = _currentCell + dir;
+            if (hitLayer == LayerMask.NameToLayer("Terrain"))
+            {
+                var hitPoint = hitInfo.point;
+                Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
+                _currentCell = newCell;
+                _highlightCell = _currentCell;
+            }
+            else if (hitLayer == LayerMask.NameToLayer("Building"))
+            {
+                var hitPoint = hitInfo.transform.position;
+                Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
+                _currentCell = newCell;
+
+                // Calculate most dominant normal axis
+                var normal = hitInfo.normal;
+                var values = new[] {Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z)};
+                var maxIndex = Array.IndexOf(values, values.Max());
+                var dir = Vector3.zero;
+                dir[maxIndex] = normal[maxIndex];
+                dir.Normalize();
+                _highlightCell = _currentCell + dir;
+            }
         }
     }
 
