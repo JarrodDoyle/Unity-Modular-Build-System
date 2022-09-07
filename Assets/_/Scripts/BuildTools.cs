@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -21,15 +20,20 @@ public enum BlockRotation
 public class BuildTools : MonoBehaviour
 {
     [SerializeField] private Material indicatorMaterial;
+    [SerializeField] private Color placeIndicatorColor;
+    [SerializeField] private Color removeIndicatorColor;
 
-    private ToolType ToolType;
+    private ToolType _toolType;
     private GridState _gridState;
     private GameObject _gridObjectsManager;
     private Dictionary<Vector3, GameObject> _gridObjectsMap;
     private PrimitiveType _primitiveType;
     private BlockRotation _rotation;
     private GameObject _indicator;
+    private Renderer _indicatorRenderer;
     private bool _overUi;
+    private GameObject _selected;
+    private Vector3 _selectedPos;
 
     private void Start()
     {
@@ -41,7 +45,9 @@ public class BuildTools : MonoBehaviour
         _indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _indicator.transform.SetParent(transform);
         _indicator.name = "Selection Indicator";
-        _indicator.GetComponent<Renderer>().material = indicatorMaterial;
+        _indicatorRenderer = _indicator.GetComponent<Renderer>();
+        _indicatorRenderer.material = indicatorMaterial;
+        SetToolType((int) ToolType.Select);
     }
 
     private void Update()
@@ -53,7 +59,7 @@ public class BuildTools : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha2)) SetToolType((int) ToolType.Place);
         if (Input.GetKeyDown(KeyCode.Alpha3)) SetToolType((int) ToolType.Remove);
 
-        switch (ToolType)
+        switch (_toolType)
         {
             case ToolType.Select:
                 SelectTool();
@@ -72,6 +78,45 @@ public class BuildTools : MonoBehaviour
         var cell = _gridState.CurrentCell;
         var cellBlocked = _gridObjectsMap.ContainsKey(cell);
         _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
+
+        if (cellBlocked && Input.GetMouseButtonDown(0))
+        {
+            Debug.Log($"Selected object at {cell}.");
+            _selected = _gridObjectsMap[cell];
+            _selectedPos = cell;
+        } else if (Input.GetMouseButtonDown(0))
+        {
+            Debug.Log($"No valid object at {cell}.");
+        }
+
+        // We want to try and move the selected object
+        if (_selected != null && Input.GetMouseButton(0) && _selectedPos != cell)
+        {
+            var move = false;
+            var moveCell = cell;
+            var hlCell = _gridState.HighlightCell;
+            var hlCellBlocked = _gridObjectsMap.ContainsKey(hlCell);
+            
+            if (!cellBlocked)
+            {
+                move = true;
+            }
+            else if (!hlCellBlocked && _selectedPos != hlCell)
+            {
+                move = true;
+                moveCell = hlCell;
+            }
+
+            if (move)
+            {
+                Debug.Log($"Moved object from {_selectedPos} to {moveCell}.");
+                _gridObjectsMap.Remove(_selectedPos);
+                _gridObjectsMap[moveCell] = _selected;
+                _selectedPos = moveCell;
+                _selected.transform.position = _gridState.cellSize * (moveCell + Vector3.one / 2);
+            }
+            
+        }
     }
 
     private void PlaceTool()
@@ -118,8 +163,23 @@ public class BuildTools : MonoBehaviour
 
     public void SetToolType(int toolType)
     {
-        ToolType = (ToolType) toolType;
-        Debug.Log($"Set tool type: {ToolType}");
+        _toolType = (ToolType) toolType;
+        switch (_toolType)
+        {
+            case ToolType.Select:
+                _indicator.SetActive(false);
+                break;
+            case ToolType.Place:
+                _indicatorRenderer.material.color = placeIndicatorColor;
+                _indicator.SetActive(true);
+                break;
+            case ToolType.Remove:
+                _indicatorRenderer.material.color = removeIndicatorColor;
+                _indicator.SetActive(true);
+                break;
+        }
+        
+        Debug.Log($"Set tool type: {_toolType}");
     }
 
     public void SetPrimitiveType(int primitiveType)

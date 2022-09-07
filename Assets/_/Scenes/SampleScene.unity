@@ -529,7 +529,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridDimensions: 11
   cellSize: 1
-  showGrid: 1
+  showGrid: 0
 --- !u!114 &329586266
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -543,6 +543,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   indicatorMaterial: {fileID: 2100000, guid: 7be90c3ce774e1cca93287e3c562c81d, type: 2}
+  placeIndicatorColor: {r: 0, g: 1, b: 0.078431375, a: 0.5019608}
+  removeIndicatorColor: {r: 1, g: 0, b: 0.078431375, a: 0.5019608}
 --- !u!1 &478925229
 GameObject:
   m_ObjectHideFlags: 0
