@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -27,7 +29,7 @@ public class BuildTools : MonoBehaviour
     private ToolType _toolType;
     private GridState _gridState;
     private GameObject _gridObjectsManager;
-    private Dictionary<Vector3, GameObject> _gridObjectsMap;
+    private Dictionary<Vector3, GridItem> _gridObjectsMap;
     private BuildObject _buildObject;
     private BlockRotation _rotation;
     private GameObject _indicator;
@@ -41,7 +43,7 @@ public class BuildTools : MonoBehaviour
         _gridState = GetComponent<GridState>();
         _gridObjectsManager = new GameObject("Built Objects");
         _gridObjectsManager.transform.SetParent(transform);
-        _gridObjectsMap = new Dictionary<Vector3, GameObject>();
+        _gridObjectsMap = new Dictionary<Vector3, GridItem>();
         _indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _indicator.transform.SetParent(transform);
         _indicator.name = "Selection Indicator";
@@ -78,64 +80,88 @@ public class BuildTools : MonoBehaviour
     {
         if (_overUi) return;
 
-        var cell = _gridState.CurrentCell;
-        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
-        _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
-
-        if (cellBlocked && Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log($"Selected object at {cell}.");
-            _selected = _gridObjectsMap[cell];
-            _selectedPos = cell;
-        }
-        else if (Input.GetMouseButtonDown(0))
-        {
-            _selected = null;
-            Debug.Log($"No valid object at {cell}.");
-        }
+            if (GetSelectedBuildObject(out var selected))
+            {
+                Debug.Log($"Selected object at {selected.cell}, slot {selected.slot}.");
 
-        if (_selected == null) return;
+                _selected = _gridObjectsMap[selected.cell].Slots[selected.slot].gameObject;
+                _selectedPos = selected.cell;
+            }
+            else
+            {
+                _selected = null;
+                Debug.Log($"No valid object at {_gridState.CurrentCell}.");
+            }
+        }
 
         // We want to try and move the selected object
-        if (Input.GetMouseButton(0) && _selectedPos != cell)
+        if (_selected == null) return;
+        if (Input.GetMouseButton(0) && _selectedPos != _gridState.CurrentCell)
         {
-            var move = false;
-            var moveCell = cell;
-            var hlCell = _gridState.HighlightCell;
-            var hlCellBlocked = _gridObjectsMap.ContainsKey(hlCell);
-
-            if (!cellBlocked)
-            {
-                move = true;
-            }
-            else if (!hlCellBlocked && _selectedPos != hlCell)
-            {
-                move = true;
-                moveCell = hlCell;
-            }
-
-            if (move)
-            {
-                Debug.Log($"Moved object from {_selectedPos} to {moveCell}.");
-                _gridObjectsMap.Remove(_selectedPos);
-                _gridObjectsMap[moveCell] = _selected;
-                _selectedPos = moveCell;
-                _selected.transform.position = _gridState.cellSize * (moveCell + Vector3.one / 2);
-            }
+            var moved = TryMoveBuildObject(_gridState.CurrentCell, _selected.transform);
+            if (!moved) TryMoveBuildObject(_gridState.HighlightCell, _selected.transform);
         }
 
+        // Rotate selection
         if (Input.GetKeyDown(KeyCode.R))
         {
-            var rotation = _selected.transform.rotation.eulerAngles.y;
-            _selected.transform.rotation = Quaternion.Euler(0, rotation + 90f, 0);
+            var buildObjSettings = _selected.GetComponent<BuildObjectSettings>();
+            var gridItem = _gridObjectsMap[buildObjSettings.cell];
+            var newSlot = (GridItemSlot) ((int) (buildObjSettings.slot + 1) % 4);
+            if (gridItem.Slots[newSlot] == null)
+            {
+                gridItem.Slots[buildObjSettings.slot] = null;
+                gridItem.Slots[newSlot] = _selected.transform;
+                buildObjSettings.slot = newSlot;
+                _rotation = (BlockRotation) newSlot;
+                _selected.transform.rotation = Quaternion.Euler(0, 90f * (int) _rotation, 0);
+            }
         }
+    }
+
+    private bool TryMoveBuildObject(Vector3 cell, Transform buildObj)
+    {
+        var buildObjSettings = buildObj.GetComponent<BuildObjectSettings>();
+        var moved = false;
+        if (_gridObjectsMap.ContainsKey(cell))
+        {
+            var gridItem = _gridObjectsMap[cell];
+            if (gridItem.Slots[(GridItemSlot) _rotation] == null)
+            {
+                gridItem.Slots[(GridItemSlot) _rotation] = buildObj;
+                moved = true;
+            }
+        }
+        else
+        {
+            _gridObjectsMap[cell] = new GridItem {Slots = {[(GridItemSlot) _rotation] = buildObj}};
+            moved = true;
+        }
+
+        if (moved)
+        {
+            // Remove the build object from it's previous slot
+            var oldGridItem = _gridObjectsMap[buildObjSettings.cell];
+            oldGridItem.Slots[buildObjSettings.slot] = null;
+            if (oldGridItem.Slots.Values.All(v => v == null))
+            {
+                _gridObjectsMap.Remove(buildObjSettings.cell);
+            }
+
+            // Update the build object cell and world position
+            buildObjSettings.cell = cell;
+            _selectedPos = cell;
+            buildObj.position = _gridState.cellSize * (cell + Vector3.one / 2);
+        }
+
+        return moved;
     }
 
     private void PlaceTool()
     {
-        var cell = _gridState.HighlightCell;
-        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
-        _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
+        _indicator.transform.position = _gridState.cellSize * (_gridState.CurrentCell + Vector3.one / 2);
 
         // Set primitive type
         if (Input.GetKeyDown(KeyCode.Z)) SetBuildObject(0);
@@ -144,39 +170,86 @@ public class BuildTools : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.V)) SetBuildObject(3);
 
         // Set rotation
-        if (Input.GetKeyDown(KeyCode.R)) _rotation += 1;
+        if (Input.GetKeyDown(KeyCode.R)) _rotation = (BlockRotation) ((int) (_rotation + 1) % 4);
 
-        // Place a primitive
-        if (!_overUi && Input.GetMouseButtonDown(0) && !cellBlocked)
+        // Attempt to place a build object
+        if (!_overUi && Input.GetMouseButtonDown(0))
         {
-            var layerIndex = LayerMask.NameToLayer("Building");
-            var buildObject = Instantiate(_buildObject.prefab, _gridObjectsManager.transform, true);
-            buildObject.position = _gridState.cellSize * (cell + Vector3.one / 2);
-            buildObject.rotation = Quaternion.Euler(0, 90f * (int) _rotation, 0);
-            buildObject.gameObject.layer = layerIndex;
-            for (var i = 0; i < buildObject.childCount; i++)
-            {
-                var child = buildObject.GetChild(i);
-                child.gameObject.layer = layerIndex;
-            }
-
-            _gridObjectsMap.Add(cell, buildObject.gameObject);
+            var placed = TryPlaceBuildObject(_gridState.CurrentCell);
+            if (!placed) TryPlaceBuildObject(_gridState.HighlightCell);
         }
+    }
+
+    private bool TryPlaceBuildObject(Vector3 cell)
+    {
+        if (_gridObjectsMap.ContainsKey(cell))
+        {
+            var gridItem = _gridObjectsMap[cell];
+            if (gridItem.Slots[(GridItemSlot) _rotation] == null)
+            {
+                gridItem.Slots[(GridItemSlot) _rotation] = InstantiateBuildObject(cell);
+                return true;
+            }
+        }
+        else
+        {
+            var gridItem = new GridItem {Slots = {[(GridItemSlot) _rotation] = InstantiateBuildObject(cell)}};
+            _gridObjectsMap[cell] = gridItem;
+            return true;
+        }
+
+        return false;
+    }
+
+    private Transform InstantiateBuildObject(Vector3 cell)
+    {
+        var layerIndex = LayerMask.NameToLayer("Building");
+        var buildObject = Instantiate(_buildObject.prefab, _gridObjectsManager.transform, true);
+        buildObject.position = _gridState.cellSize * (cell + Vector3.one / 2);
+        buildObject.rotation = Quaternion.Euler(0, 90f * (int) _rotation, 0);
+        buildObject.gameObject.layer = layerIndex;
+        for (var i = 0; i < buildObject.childCount; i++)
+        {
+            var child = buildObject.GetChild(i);
+            child.gameObject.layer = layerIndex;
+        }
+
+        var bos = buildObject.AddComponent<BuildObjectSettings>();
+        bos.cell = cell;
+        bos.slot = (GridItemSlot) _rotation;
+
+        return buildObject;
     }
 
     private void RemoveTool()
     {
-        var cell = _gridState.CurrentCell;
-        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
-        _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
-
-        // Delete a primitive
-        if (!_overUi && Input.GetMouseButtonDown(0) && cellBlocked)
+        _indicator.transform.position = _gridState.cellSize * (_gridState.CurrentCell + Vector3.one / 2);
+        if (!_overUi && Input.GetMouseButtonDown(0) && GetSelectedBuildObject(out var settings))
         {
-            var go = _gridObjectsMap[cell];
-            Destroy(go);
-            _gridObjectsMap.Remove(cell);
+            var cell = settings.cell;
+            var slot = settings.slot;
+            var gridItem = _gridObjectsMap[cell];
+            gridItem.Slots[slot] = null;
+            Destroy(settings.gameObject);
+            if (gridItem.Slots.Values.All(v => v == null))
+            {
+                _gridObjectsMap.Remove(cell);
+            }
         }
+    }
+
+    private bool GetSelectedBuildObject(out BuildObjectSettings selected)
+    {
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out var hitInfo, _gridState.pickDistance, LayerMask.GetMask("Building")))
+        {
+            var hitTransform = hitInfo.transform;
+            selected = hitTransform.GetComponentInParent<BuildObjectSettings>();
+            return selected != null;
+        }
+
+        selected = null;
+        return false;
     }
 
     public void SetToolType(int toolType)
