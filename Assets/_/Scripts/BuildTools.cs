@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public enum ToolType
 {
@@ -28,6 +29,7 @@ public class BuildTools : MonoBehaviour
     private PrimitiveType _primitiveType;
     private BlockRotation _rotation;
     private GameObject _indicator;
+    private bool _overUi;
 
     private void Start()
     {
@@ -44,6 +46,9 @@ public class BuildTools : MonoBehaviour
 
     private void Update()
     {
+        var selected = EventSystem.current.currentSelectedGameObject;
+        _overUi = selected != null && selected.layer == LayerMask.NameToLayer("UI");
+        
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetToolType((int) ToolType.Select);
         if (Input.GetKeyDown(KeyCode.Alpha2)) SetToolType((int) ToolType.Place);
         if (Input.GetKeyDown(KeyCode.Alpha3)) SetToolType((int) ToolType.Remove);
@@ -85,7 +90,7 @@ public class BuildTools : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R)) _rotation += 1;
 
         // Place a primitive
-        if (Input.GetMouseButtonDown(0) && !cellBlocked)
+        if (!_overUi && Input.GetMouseButtonDown(0) && !cellBlocked)
         {
             var go = GameObject.CreatePrimitive(_primitiveType);
             go.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
@@ -103,7 +108,7 @@ public class BuildTools : MonoBehaviour
         _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
 
         // Delete a primitive
-        if (Input.GetMouseButtonDown(0) && cellBlocked)
+        if (!_overUi && Input.GetMouseButtonDown(0) && cellBlocked)
         {
             var go = _gridObjectsMap[cell];
             Destroy(go);
