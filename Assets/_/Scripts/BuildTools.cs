@@ -22,12 +22,13 @@ public class BuildTools : MonoBehaviour
     [SerializeField] private Material indicatorMaterial;
     [SerializeField] private Color placeIndicatorColor;
     [SerializeField] private Color removeIndicatorColor;
+    [SerializeField] private BuildObject[] buildObjects;
 
     private ToolType _toolType;
     private GridState _gridState;
     private GameObject _gridObjectsManager;
     private Dictionary<Vector3, GameObject> _gridObjectsMap;
-    private PrimitiveType _primitiveType;
+    private BuildObject _buildObject;
     private BlockRotation _rotation;
     private GameObject _indicator;
     private Renderer _indicatorRenderer;
@@ -41,20 +42,20 @@ public class BuildTools : MonoBehaviour
         _gridObjectsManager = new GameObject("Built Objects");
         _gridObjectsManager.transform.SetParent(transform);
         _gridObjectsMap = new Dictionary<Vector3, GameObject>();
-        _primitiveType = PrimitiveType.Cube;
         _indicator = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _indicator.transform.SetParent(transform);
         _indicator.name = "Selection Indicator";
         _indicatorRenderer = _indicator.GetComponent<Renderer>();
         _indicatorRenderer.material = indicatorMaterial;
         SetToolType((int) ToolType.Select);
+        SetBuildObject(0);
     }
 
     private void Update()
     {
         var selected = EventSystem.current.currentSelectedGameObject;
         _overUi = selected != null && selected.layer == LayerMask.NameToLayer("UI");
-        
+
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetToolType((int) ToolType.Select);
         if (Input.GetKeyDown(KeyCode.Alpha2)) SetToolType((int) ToolType.Place);
         if (Input.GetKeyDown(KeyCode.Alpha3)) SetToolType((int) ToolType.Remove);
@@ -86,14 +87,15 @@ public class BuildTools : MonoBehaviour
             Debug.Log($"Selected object at {cell}.");
             _selected = _gridObjectsMap[cell];
             _selectedPos = cell;
-        } else if (Input.GetMouseButtonDown(0))
+        }
+        else if (Input.GetMouseButtonDown(0))
         {
             _selected = null;
             Debug.Log($"No valid object at {cell}.");
         }
 
         if (_selected == null) return;
-        
+
         // We want to try and move the selected object
         if (Input.GetMouseButton(0) && _selectedPos != cell)
         {
@@ -101,7 +103,7 @@ public class BuildTools : MonoBehaviour
             var moveCell = cell;
             var hlCell = _gridState.HighlightCell;
             var hlCellBlocked = _gridObjectsMap.ContainsKey(hlCell);
-            
+
             if (!cellBlocked)
             {
                 move = true;
@@ -136,10 +138,10 @@ public class BuildTools : MonoBehaviour
         _indicator.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
 
         // Set primitive type
-        if (Input.GetKeyDown(KeyCode.Z)) _primitiveType = PrimitiveType.Cube;
-        if (Input.GetKeyDown(KeyCode.X)) _primitiveType = PrimitiveType.Capsule;
-        if (Input.GetKeyDown(KeyCode.C)) _primitiveType = PrimitiveType.Cylinder;
-        if (Input.GetKeyDown(KeyCode.V)) _primitiveType = PrimitiveType.Sphere;
+        if (Input.GetKeyDown(KeyCode.Z)) SetBuildObject(0);
+        if (Input.GetKeyDown(KeyCode.X)) SetBuildObject(1);
+        if (Input.GetKeyDown(KeyCode.C)) SetBuildObject(2);
+        if (Input.GetKeyDown(KeyCode.V)) SetBuildObject(3);
 
         // Set rotation
         if (Input.GetKeyDown(KeyCode.R)) _rotation += 1;
@@ -147,12 +149,18 @@ public class BuildTools : MonoBehaviour
         // Place a primitive
         if (!_overUi && Input.GetMouseButtonDown(0) && !cellBlocked)
         {
-            var go = GameObject.CreatePrimitive(_primitiveType);
-            go.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
-            go.transform.rotation = Quaternion.Euler(0, 90f * (int) _rotation, 0);
-            go.transform.SetParent(_gridObjectsManager.transform);
-            go.layer = LayerMask.NameToLayer("Building");
-            _gridObjectsMap.Add(cell, go);
+            var layerIndex = LayerMask.NameToLayer("Building");
+            var buildObject = Instantiate(_buildObject.prefab, _gridObjectsManager.transform, true);
+            buildObject.position = _gridState.cellSize * (cell + Vector3.one / 2);
+            buildObject.rotation = Quaternion.Euler(0, 90f * (int) _rotation, 0);
+            buildObject.gameObject.layer = layerIndex;
+            for (var i = 0; i < buildObject.childCount; i++)
+            {
+                var child = buildObject.GetChild(i);
+                child.gameObject.layer = layerIndex;
+            }
+
+            _gridObjectsMap.Add(cell, buildObject.gameObject);
         }
     }
 
@@ -190,13 +198,13 @@ public class BuildTools : MonoBehaviour
                 _indicator.SetActive(true);
                 break;
         }
-        
+
         Debug.Log($"Set tool type: {_toolType}");
     }
 
-    public void SetPrimitiveType(int primitiveType)
+    private void SetBuildObject(int index)
     {
-        _primitiveType = (PrimitiveType) primitiveType;
-        Debug.Log($"Set primitive type: {_primitiveType}");
+        _buildObject = buildObjects[index];
+        Debug.Log($"Set build object type: {_buildObject}");
     }
 }

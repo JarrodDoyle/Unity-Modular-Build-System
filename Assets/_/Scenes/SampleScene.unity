@@ -528,6 +528,11 @@ MonoBehaviour:
   indicatorMaterial: {fileID: 2100000, guid: 7be90c3ce774e1cca93287e3c562c81d, type: 2}
   placeIndicatorColor: {r: 0, g: 1, b: 0.078431375, a: 0.5019608}
   removeIndicatorColor: {r: 1, g: 0, b: 0.078431375, a: 0.5019608}
+  buildObjects:
+  - {fileID: 11400000, guid: 4091f77ac7954244b9faa8dffe77d107, type: 2}
+  - {fileID: 11400000, guid: f44a0d608f807fde3ab905da98310ee0, type: 2}
+  - {fileID: 11400000, guid: 5e46e5c221ba4512ebdb1342a4893c47, type: 2}
+  - {fileID: 11400000, guid: b3e61a52fe512574b866477676bf0b6f, type: 2}
 --- !u!1 &478925229
 GameObject:
   m_ObjectHideFlags: 0
@@ -635,12 +640,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 329586266}
         m_TargetAssemblyTypeName: BuildTools, Assembly-CSharp
-        m_MethodName: SetPrimitiveType
+        m_MethodName: SetBuildObject
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 3
+          m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -945,7 +950,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 329586266}
         m_TargetAssemblyTypeName: BuildTools, Assembly-CSharp
-        m_MethodName: SetPrimitiveType
+        m_MethodName: SetBuildObject
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1438,7 +1443,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 329586266}
         m_TargetAssemblyTypeName: BuildTools, Assembly-CSharp
-        m_MethodName: SetPrimitiveType
+        m_MethodName: SetBuildObject
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2420,12 +2425,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 329586266}
         m_TargetAssemblyTypeName: BuildTools, Assembly-CSharp
-        m_MethodName: SetPrimitiveType
+        m_MethodName: SetBuildObject
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 3
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
