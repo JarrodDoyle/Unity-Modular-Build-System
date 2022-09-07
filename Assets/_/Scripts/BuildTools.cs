@@ -88,6 +88,7 @@ public class BuildTools : MonoBehaviour
             _selectedPos = cell;
         } else if (Input.GetMouseButtonDown(0))
         {
+            _selected = null;
             Debug.Log($"No valid object at {cell}.");
         }
 
