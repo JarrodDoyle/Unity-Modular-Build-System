@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using UnityEngine;
 
 public class GridState : MonoBehaviour
@@ -7,10 +9,12 @@ public class GridState : MonoBehaviour
     public bool showGrid;
 
     public Vector3 CurrentCell => _currentCell;
+    public Vector3 HighlightCell => _highlightCell;
 
     private bool _dirtyGrid;
     private GridRenderer _gridRenderer;
     private Vector3 _currentCell;
+    private Vector3 _highlightCell;
 
     private void Start()
     {
@@ -25,22 +29,35 @@ public class GridState : MonoBehaviour
             _gridRenderer.dirtyGrid = true;
         }
 
-        var mouseDelta = Input.mouseScrollDelta.y;
-        if (Input.GetKeyDown(KeyCode.Q) || mouseDelta < 0) _currentCell.y -= 1;
-        if (Input.GetKeyDown(KeyCode.E) || mouseDelta > 0) _currentCell.y += 1;
-        
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        var plane = new Plane(Vector3.up, -_currentCell.y * cellSize);
-        
-        if (plane.Raycast(ray, out var enter))
+        var uiHit = Physics.Raycast(ray, 10f, LayerMask.GetMask("UI"));
+        var terrainHit = Physics.Raycast(ray, out var terrainHitInfo, 25f, LayerMask.GetMask("Terrain"));
+        var buildingHit = Physics.Raycast(ray, out var buildingHitInfo, 25f, LayerMask.GetMask("Building"));
+
+        if (!uiHit && terrainHit && !buildingHit)
         {
-            var hitPoint = ray.GetPoint(enter);
+            var hitPoint = terrainHitInfo.point;
             Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
-            newCell.y = _currentCell.y;
             _currentCell = newCell;
+            _highlightCell = _currentCell;
+        }
+        else if (!uiHit && buildingHit)
+        {
+            var hitPoint = buildingHitInfo.transform.position;
+            Vector3 newCell = Vector3Int.FloorToInt(hitPoint / cellSize);
+            _currentCell = newCell;
+
+            // Calculate most dominant normal axis
+            var normal = buildingHitInfo.normal;
+            var values = new[] {Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z)};
+            var maxIndex = Array.IndexOf(values, values.Max());
+            var dir = Vector3.zero;
+            dir[maxIndex] = normal[maxIndex];
+            dir.Normalize();
+            _highlightCell = _currentCell + dir;
         }
     }
-    
+
     private void OnValidate()
     {
         if (Application.isPlaying)

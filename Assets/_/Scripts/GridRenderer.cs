@@ -33,7 +33,7 @@ public class GridRenderer : MonoBehaviour
             _gridLines.SetActive(_gridState.showGrid);
         }
 
-        var dir = _gridState.CurrentCell - _prevCell;
+        var dir = _gridState.HighlightCell - _prevCell;
         if (dir != Vector3.zero)
         {
             MoveLines(dir);

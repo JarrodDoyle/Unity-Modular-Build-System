@@ -41,29 +41,29 @@ public class BuildTools : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha2)) SetToolType((int) ToolType.Place);
         if (Input.GetKeyDown(KeyCode.Alpha3)) SetToolType((int) ToolType.Remove);
 
-        var cell = _gridState.CurrentCell;
-        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
-
         switch (ToolType)
         {
             case ToolType.Select:
-                SelectTool(cell, cellBlocked);
+                SelectTool();
                 break;
             case ToolType.Place:
-                PlaceTool(cell, cellBlocked);
+                PlaceTool();
                 break;
             case ToolType.Remove:
-                RemoveTool(cell, cellBlocked);
+                RemoveTool();
                 break;
         }
     }
 
-    private void SelectTool(Vector3 cell, bool cellBlocked)
+    private void SelectTool()
     {
     }
 
-    private void PlaceTool(Vector3 cell, bool cellBlocked)
+    private void PlaceTool()
     {
+        var cell = _gridState.HighlightCell;
+        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
+
         // Set primitive type
         if (Input.GetKeyDown(KeyCode.Z)) _primitiveType = PrimitiveType.Cube;
         if (Input.GetKeyDown(KeyCode.X)) _primitiveType = PrimitiveType.Capsule;
@@ -80,12 +80,16 @@ public class BuildTools : MonoBehaviour
             go.transform.position = _gridState.cellSize * (cell + Vector3.one / 2);
             go.transform.rotation = Quaternion.Euler(0, 90f * (int) _rotation, 0);
             go.transform.SetParent(_gridObjectsManager.transform);
+            go.layer = LayerMask.NameToLayer("Building");
             _gridObjectsMap.Add(cell, go);
         }
     }
 
-    private void RemoveTool(Vector3 cell, bool cellBlocked)
+    private void RemoveTool()
     {
+        var cell = _gridState.CurrentCell;
+        var cellBlocked = _gridObjectsMap.ContainsKey(cell);
+
         // Delete a primitive
         if (Input.GetMouseButtonDown(0) && cellBlocked)
         {

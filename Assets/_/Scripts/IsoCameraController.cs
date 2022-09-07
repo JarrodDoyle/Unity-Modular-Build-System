@@ -17,7 +17,7 @@ public class IsoCameraController : MonoBehaviour
     private void Update()
     {
         var position = transform.position;
-        
+
         // Cardinal direction movement
         var dir = Vector3.zero;
         if (Input.GetKey(KeyCode.W)) dir += _north;
@@ -27,9 +27,6 @@ public class IsoCameraController : MonoBehaviour
         if (dir != Vector3.zero) dir = dir.normalized;
         dir = Quaternion.Euler(0, _rotation, 0) * dir;
         position += dir * (moveSpeed * Time.deltaTime);
-
-        // Y-Axis movement
-        position.y = gridState.CurrentCell.y * gridState.cellSize;
 
         // Rotation
         var newMousePos = Input.mousePosition;
